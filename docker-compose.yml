@@ -1,0 +1,46 @@
+version: '3.7'
+services:
+  kalah:
+    build: .
+    depends_on:
+      - mongodb
+    networks:
+      - kalah
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/build
+    environment:
+      SPRING_DATA_MONGODB_HOST: "mongodb"
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - kalah
+    volumes:
+      - mongo_data:/data/db
+  prometheus:
+    image: prom/prometheus
+    depends_on:
+      - kalah
+    networks:
+      - kalah
+    volumes:
+      - ./env/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana
+    networks:
+      - kalah
+    ports:
+      - "3000:3000"
+    env_file:
+      - env/grafana.env
+
+volumes:
+  mongo_data:
+
+networks:
+  kalah:

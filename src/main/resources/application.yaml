@@ -6,4 +6,8 @@ spring:
       database: "kalah"
       uuid-representation: standard
 
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus, health"
