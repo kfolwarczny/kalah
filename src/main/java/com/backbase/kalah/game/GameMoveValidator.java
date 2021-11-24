@@ -12,6 +12,9 @@ public final class GameMoveValidator {
     private GameMoveValidator() {
     }
 
+    /**
+     * Validates move in a game
+     */
     public static Either<ThrowableProblem, Game> validateMove(Game game, int moveId) {
         if (moveId < 1 || moveId > 14) {
             log.warn("User selected number outside the scope 1-14");

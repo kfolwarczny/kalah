@@ -42,6 +42,12 @@ public class Game {
         this.currentPlayer = currentPlayer;
     }
 
+    /**
+     * Starts new game.
+     *
+     * @param players list of players taking place in game. Expected size of list 2
+     * @return new game
+     */
     public static Game startGame(List<Player> players) {
         if (CollectionUtils.isEmpty(players) || players.size() != 2) {
             throw new IllegalStateException("Players could not be empty, or differs in size from 2");
@@ -59,13 +65,25 @@ public class Game {
         return new Game(UUID.randomUUID(), gameMap, players, players.get(0));
     }
 
+    /**
+     * Checks if for give pitId current player can make that move
+     *
+     * @param pitId pitID to check if for it move can be made
+     * @return true or false
+     */
     public boolean canPlayerMakeThatMove(int pitId) {
         final var playersIndex = pitId >= 1 && pitId <= 7 ? 0 : 1;
         return players.get(playersIndex).equals(currentPlayer) && board.get(pitId) != 0;
     }
 
+    /**
+     * Trying to make a move for a given pitIndex. May Fail if move is forbidden.
+     *
+     * @param pitIndex pitIndex of where the move will start
+     * @return Either error when move is forbidden or the new game state
+     */
     public Either<ThrowableProblem, Game> move(Integer pitIndex) {
-       return GameMoveValidator.validateMove(this, pitIndex)
+        return GameMoveValidator.validateMove(this, pitIndex)
                 .map(validated -> {
                     int tmpIndex = pitIndex;
                     final Map<Integer, Integer> tmpBoard = new HashMap<>(board);

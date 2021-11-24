@@ -26,6 +26,13 @@ public class GameManager {
         this.gameInfrastructure = gameInfrastructure;
     }
 
+    /**
+     * Make a move in a game with Id
+     *
+     * @param gameId the ID of a game where the move will take place
+     * @param pitId  the ID of pit from which the move starts
+     * @return Either error if game not found or move could not be executed or board representation
+     */
     public Either<ThrowableProblem, Map<Integer, Integer>> makeAMove(UUID gameId, Integer pitId) {
         final var game = fetchGame(gameId);
 
@@ -36,6 +43,12 @@ public class GameManager {
                 .map(Game::getBoard);
     }
 
+    /**
+     * Fetches game for given UUID
+     *
+     * @param gameId the ID of a game to fetch
+     * @return Optional of game if found
+     */
     public Optional<Game> fetchGame(UUID gameId) {
         return gameInfrastructure.findById(gameId);
     }

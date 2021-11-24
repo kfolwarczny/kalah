@@ -24,6 +24,9 @@ public class GameCreator {
     }
 
 
+    /**
+    * Creates new game and returns Try of game ID.
+    * */
     public Try<UUID> createGame() {
         log.info("Starting new game...");
 
