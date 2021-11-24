@@ -1,5 +1,6 @@
 package com.backbase.kalah.game.model;
 
+import com.backbase.kalah.game.GameMoveValidator;
 import io.vavr.control.Either;
 import lombok.With;
 import lombok.extern.slf4j.Slf4j;
@@ -7,10 +8,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.CollectionUtils;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
 import org.zalando.problem.ThrowableProblem;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,6 +18,8 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toMap;
 
 @Document(value = "games")
@@ -36,7 +38,7 @@ public class Game {
     Game(UUID id, Map<Integer, Integer> board, List<Player> players, Player currentPlayer) {
         this.id = id;
         this.board = board;
-        this.players = players;
+        this.players = unmodifiableList(players);
         this.currentPlayer = currentPlayer;
     }
 
@@ -57,18 +59,19 @@ public class Game {
         return new Game(UUID.randomUUID(), gameMap, players, players.get(0));
     }
 
-    public boolean canThisPlayerMove(Integer pitId) {
+    public boolean canPlayerMakeThatMove(int pitId) {
         final var playersIndex = pitId >= 1 && pitId <= 7 ? 0 : 1;
         return players.get(playersIndex).equals(currentPlayer) && board.get(pitId) != 0;
     }
 
     public Either<ThrowableProblem, Game> move(Integer pitIndex) {
-        return validateMove(pitIndex)
+       return GameMoveValidator.validateMove(this, pitIndex)
                 .map(validated -> {
-                    var tmpIndex = pitIndex;
+                    int tmpIndex = pitIndex;
+                    final Map<Integer, Integer> tmpBoard = new HashMap<>(board);
 
-                    var numOfStonesInPit = board.get(tmpIndex);
-                    board.replace(tmpIndex, 0);
+                    var numOfStonesInPit = tmpBoard.get(tmpIndex);
+                    tmpBoard.replace(tmpIndex, 0);
 
                     while (numOfStonesInPit > 0) {
                         tmpIndex++;
@@ -85,39 +88,17 @@ public class Game {
                             }
                         }
 
-                        board.compute(tmpIndex, (k, numOfStones) -> numOfStones + 1);
+                        tmpBoard.compute(tmpIndex, (__, numOfStones) -> numOfStones + 1);
                         numOfStonesInPit--;
                     }
 
                     if (isThisNotMyHouse(tmpIndex)) {
                         final var nextPlayer = switchPlayer();
-                        return new Game(this.id, board, players, nextPlayer);
+                        return new Game(this.id, tmpBoard, players, nextPlayer);
                     }
 
-                    return this;
+                    return new Game(this.id, tmpBoard, players, currentPlayer);
                 });
-    }
-
-    private Either<ThrowableProblem, Game> validateMove(Integer pitId) {
-        if (pitId < 0 || pitId > 14) {
-            log.warn("User selected number outside the scope 1-14");
-            return Either.left(buildValidationProblem("User selected number outside the scope 1-14"));
-        } else if (!canThisPlayerMove(pitId)) {
-            log.warn("This player could not move");
-            return Either.left(buildValidationProblem("This player could not move. It's second player move."));
-        } else if (pitId == 7 || pitId == 14) {
-            log.warn("User selected houses as starting points");
-            return Either.left(buildValidationProblem("User selected houses as starting points"));
-        }
-        return Either.right(this);
-    }
-
-    private ThrowableProblem buildValidationProblem(String message) {
-        return Problem.builder()
-                .withStatus(Status.BAD_REQUEST)
-                .withTitle("Validation error")
-                .withDetail(message)
-                .build();
     }
 
     private Player switchPlayer() {
@@ -143,7 +124,7 @@ public class Game {
     }
 
     public Map<Integer, Integer> getBoard() {
-        return board;
+        return unmodifiableMap(board);
     }
 
     public List<Player> getPlayers() {

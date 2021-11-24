@@ -1,5 +1,6 @@
 package com.backbase.kalah.game.model;
 
+import lombok.With;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -8,6 +9,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Document(value = "players")
+@With
 public class Player {
 
     @Id

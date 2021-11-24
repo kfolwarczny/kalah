@@ -2,7 +2,7 @@ package com.backbase.kalah.web;
 
 import com.backbase.kalah.game.GameCreator;
 import com.backbase.kalah.game.GameManager;
-import com.backbase.kalah.game.GameMockery;
+import com.backbase.kalah.game.model.GameMockery;
 import io.vavr.control.Try;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,13 +48,15 @@ class GameControllerTest {
         @Test
         void shouldReturnLinkToGameWhenOK() throws Exception {
             final var uuid = UUID.randomUUID();
-            when(gameCreator.createGame()).thenReturn(success(uuid));
 
+            //when
+            when(gameCreator.createGame()).thenReturn(success(uuid));
             mockMvc.perform(post("/games"))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", is(uuid.toString())))
                     .andExpect(jsonPath("$.uri", is("http://localhost:8080/games/" + uuid)));
 
+            //then
             verify(gameManager, never()).fetchGame(any());
             verify(gameManager, never()).makeAMove(any(), any());
         }
@@ -79,12 +81,16 @@ class GameControllerTest {
         @Test
         void shouldReturn200WhenGameWentFound() throws Exception {
             //given
-            final var uuid = UUID.fromString("ba1ff57c-a25c-404e-819b-a6175509d9a4");
-            final var expectedResult = loadJson("new-game.json");
+            final var gameUUID = UUID.fromString("ba1ff57c-a25c-404e-819b-a6175509d9a4");
+            final var playerOneUUID = UUID.fromString("c40c058b-60ec-4340-b104-d42c33969698");
+            final var playerTwoUUID = UUID.fromString("1920f6b5-2949-4a90-8a7e-39b444184fe5");
+            final var mockedGame = GameMockery.gameInPlay(gameUUID, playerOneUUID, playerTwoUUID);
+
+            final var expectedResult = loadJson("game-in-play.json");
 
             //when
-            when(gameManager.fetchGame(uuid)).thenReturn(Optional.of(GameMockery.gameInPlay(uuid)));
-            final var response = mockMvc.perform(get("/games/" + uuid))
+            when(gameManager.fetchGame(gameUUID)).thenReturn(Optional.of(mockedGame));
+            final var response = mockMvc.perform(get("/games/" + gameUUID))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -107,8 +113,7 @@ class GameControllerTest {
 
     private String loadJson(String fileName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(fileName)
-                .getFile());
+        File file = new File(classLoader.getResource(fileName).getFile());
         return Files.readString(file.toPath());
     }
 }

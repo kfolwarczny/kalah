@@ -29,7 +29,7 @@ public class GameManager {
     public Either<ThrowableProblem, Map<Integer, Integer>> makeAMove(UUID gameId, Integer pitId) {
         final var game = fetchGame(gameId);
 
-       return Option.ofOptional(game)
+        return Option.ofOptional(game)
                 .toEither(Problem.valueOf(Status.NOT_FOUND))
                 .flatMap(it -> it.move(pitId))
                 .map(gameInfrastructure::save)

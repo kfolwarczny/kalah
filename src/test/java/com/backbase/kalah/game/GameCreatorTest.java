@@ -2,6 +2,7 @@ package com.backbase.kalah.game;
 
 import com.backbase.kalah.game.infrastructure.GameInfrastructure;
 import com.backbase.kalah.game.model.Game;
+import com.backbase.kalah.game.model.GameMockery;
 import com.backbase.kalah.game.model.Player;
 import com.mongodb.MongoClientException;
 import org.junit.jupiter.api.Test;
