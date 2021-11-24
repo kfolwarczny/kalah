@@ -13,10 +13,13 @@ import java.util.UUID;
 @Slf4j
 public class GameCreator {
 
+    private final PlayersService playersService;
     private final GameInfrastructure gameInfrastructure;
 
     @Autowired
-    public GameCreator(GameInfrastructure gameInfrastructure) {
+    public GameCreator(PlayersService playersService,
+                       GameInfrastructure gameInfrastructure) {
+        this.playersService = playersService;
         this.gameInfrastructure = gameInfrastructure;
     }
 
@@ -25,7 +28,8 @@ public class GameCreator {
         log.info("Starting new game...");
 
         return Try.of(() -> {
-                    final var newGame = Game.startGame();
+                    final var players = playersService.createPlayers();
+                    final var newGame = Game.startGame(players);
                     return gameInfrastructure.insert(newGame)
                             .getId();
                 })

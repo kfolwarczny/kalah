@@ -7,6 +7,7 @@ import com.backbase.kalah.web.model.GameMoveResponse;
 import com.backbase.kalah.web.model.GameResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,9 @@ import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
 
 import java.util.UUID;
+
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.status;
 
 @RestController
 @Slf4j
@@ -46,23 +50,30 @@ public class GameController {
                                     .withTitle("Could not create new game")
                                     .build();
                         },
-                        ResponseEntity::ok
+                        resp -> status(HttpStatus.CREATED).body(resp)
                 );
     }
 
     @GetMapping(value = "/{gameId}")
     public ResponseEntity<GameResponse> fetchGame(@PathVariable("gameId") UUID gameId) {
         return gameManager.fetchGame(gameId)
-                .map(game -> new GameResponse(game.getId(), game.getMap()))
+                .map(game -> new GameResponse(game.getId(), game.getBoard(), game.getPlayersUUID(), game.getCurrentPlayer().getId()))
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping(value = "/{gameId}/pits/{pitId}")
     public ResponseEntity<GameMoveResponse> makeMove(@PathVariable("gameId") UUID gameId,
-                                                     @PathVariable("pitId") long pitId) {
+                                                     @PathVariable("pitId") int pitId) {
         final var moveResult = gameManager.makeAMove(gameId, pitId);
-        return ResponseEntity.ok(new GameMoveResponse(gameId, moveResult));
+
+        return moveResult
+                .fold(
+                        err -> {
+                            throw err;
+                        },
+                        s -> ok(new GameMoveResponse(gameId, s))
+                );
     }
 
 }
