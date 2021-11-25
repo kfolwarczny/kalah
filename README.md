@@ -1,6 +1,6 @@
 # Kalah game
 
-Simple implementation of Kalah game see ->> https://pl.wikipedia.org/wiki/Kalaha
+Simple implementation of Kalah game see ->> https://en.wikipedia.org/wiki/Kalah
 The app is build in Spring Boot on Java 17.
 
 Required external resources: MongoDB as game storage
@@ -19,3 +19,8 @@ The app and all required things is dockerized, to use docker please execute comm
 - prometheus --> 9090
 - grafana --> 3000
 - kalah app --> 8080
+
+
+TODOs:
+- implement all left game corner cases like putting a stone in empty pit.
+- add bussiness KPIs to monitor them in Grafana like number of games, total number of players, etc.
